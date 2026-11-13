@@ -1,0 +1,28 @@
+name: APK bauen
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: ZIP entpacken
+        run: |
+          mkdir -p entpackt
+          unzip -o SoundAssistent.zip -d entpackt
+          P=$(dirname "$(find entpackt -name settings.gradle.kts | head -1)")
+          echo "PROJ=$P" >> $GITHUB_ENV
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.7
+      - name: APK bauen
+        run: cd "$PROJ" && gradle assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SoundAssistent-APK
+          path: ${{ env.PROJ }}/app/build/outputs/apk/debug/*.apk
